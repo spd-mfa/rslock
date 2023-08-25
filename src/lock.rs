@@ -588,6 +588,7 @@ mod tests {
         is_normal::<LockManager>();
         is_normal::<LockError>();
         is_normal::<Lock>();
+        #[cfg(not(feature = "tokio-comp"))]
         is_normal::<LockGuard>();
     }
 
@@ -757,7 +758,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(all(not(feature = "tokio-comp"), feature = "async-std-comp"))]
+    #[cfg(not(feature = "tokio-comp"))]
     #[tokio::test]
     async fn test_lock_lock_unlock_raii() -> Result<()> {
         let (_containers, addresses) = create_clients().await;
@@ -792,7 +793,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(feature = "tokio-comp")]
+    #[cfg(not(feature = "tokio-comp"))]
     #[tokio::test]
     async fn test_lock_raii_does_not_unlock_with_tokio_enabled() -> Result<()> {
         let (_containers, addresses) = create_clients().await;
@@ -854,7 +855,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(feature = "async-std-comp")]
+    #[cfg(not(feature = "tokio-comp"))]
     #[tokio::test]
     async fn test_lock_extend_lock() -> Result<()> {
         let (_containers, addresses) = create_clients().await;
@@ -894,7 +895,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(feature = "async-std-comp")]
+    #[cfg(not(feature = "tokio-comp"))]
     #[tokio::test]
     async fn test_lock_extend_lock_releases() -> Result<()> {
         let (_containers, addresses) = create_clients().await;
