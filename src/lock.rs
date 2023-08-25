@@ -241,6 +241,7 @@ pub struct Lock {
 /// meaning that dropping the `LockGuard` will be a no-op.
 /// Under this circumstance, `LockManager::unlock` can be called manually using the inner `lock` at the appropriate
 /// point to release the lock taken in `Redis`.
+#[cfg(not(feature = "tokio-comp"))]
 #[derive(Debug)]
 pub struct LockGuard {
     pub lock: Lock,
@@ -431,7 +432,7 @@ impl LockManager {
     /// The lock is placed in a guard that will unlock the lock when the guard is dropped.
     ///
     /// May return `LockError::TtlTooLarge` if `ttl` is too large.
-    #[cfg(feature = "async-std-comp")]
+    #[cfg(not(feature = "tokio-comp"))]
     pub async fn acquire(&self, resource: &[u8], ttl: Duration) -> Result<LockGuard, LockError> {
         let lock = self.acquire_no_guard(resource, ttl).await?;
         Ok(LockGuard { lock })
