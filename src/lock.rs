@@ -62,17 +62,17 @@ pub struct Lock<'a> {
     pub lock_manager: &'a LockManager,
 }
 
-#[cfg(not(feature = "tokio-comp"))]
+#[cfg(not(feature = "tokio"))]
 #[derive(Debug, Clone)]
 pub struct LockGuard<'a> {
     pub lock: Lock<'a>,
 }
 
 
-// Dropping this guard inside the context of a tokio runtime if tokio-comp is enabled 
+// Dropping this guard inside the context of a tokio runtime if tokio is enabled 
 // will block the tokio runtime. 
-// Because of this, the guard is not compiled if tokio-comp is enabled. 
-#[cfg(not(feature = "tokio-comp"))]
+// Because of this, the guard is not compiled if tokio is enabled.
+#[cfg(not(feature = "tokio"))]
 impl Drop for LockGuard<'_> {
     fn drop(&mut self) {
         futures::executor::block_on(self.lock.lock_manager.unlock(&self.lock));
@@ -260,7 +260,7 @@ impl LockManager {
     /// Loops until the lock is acquired.
     ///
     /// The lock is placed in a guard that will unlock the lock when the guard is dropped.
-    #[cfg(not(feature = "tokio-comp"))]
+    #[cfg(not(feature = "tokio"))]
     pub async fn acquire<'a>(&'a self, resource: &[u8], ttl: usize) -> LockGuard<'a> {
         let lock = self.acquire_no_guard(resource, ttl).await;
         LockGuard{lock}
@@ -322,7 +322,7 @@ mod tests {
         is_normal::<LockManager>();
         is_normal::<LockError>();
         is_normal::<Lock>();
-        #[cfg(not(feature = "tokio-comp"))]
+        #[cfg(not(feature = "tokio"))]
         is_normal::<LockGuard>();
     }
 
@@ -487,7 +487,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(not(feature = "tokio-comp"))]
+    #[cfg(not(feature = "tokio"))]
     #[tokio::test]
     async fn test_lock_lock_unlock_raii() -> Result<()> {
         let (_containers, addresses) = create_clients();
@@ -519,7 +519,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(not(feature = "tokio-comp"))]
+    #[cfg(not(feature = "tokio"))]
     #[tokio::test]
     async fn test_lock_extend_lock() -> Result<()> {
         let (_containers, addresses) = create_clients();
@@ -554,7 +554,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(not(feature = "tokio-comp"))]
+    #[cfg(not(feature = "tokio"))]
     #[tokio::test]
     async fn test_lock_extend_lock_releases() -> Result<()> {
         let (_containers, addresses) = create_clients();
