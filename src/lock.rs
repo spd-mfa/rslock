@@ -36,6 +36,17 @@ pub enum LockError {
     Unavailable,
 }
 
+impl std::fmt::Display for LockError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Io(io_error) => io_error.fmt(f),
+            Self::Redis(redis_error) => redis_error.fmt(f),
+            Self::Unavailable => f.write_str("Could not acquire distributed lock"),
+        }
+    }
+}
+impl std::error::Error for LockError {}
+
 /// The lock manager.
 ///
 /// Implements the necessary functionality to acquire and release locks
@@ -68,9 +79,8 @@ pub struct LockGuard<'a> {
     pub lock: Lock<'a>,
 }
 
-
-// Dropping this guard inside the context of a tokio runtime if tokio is enabled 
-// will block the tokio runtime. 
+// Dropping this guard inside the context of a tokio runtime if tokio is enabled
+// will block the tokio runtime.
 // Because of this, the guard is not compiled if tokio is enabled.
 #[cfg(not(feature = "tokio"))]
 impl Drop for LockGuard<'_> {
@@ -85,19 +95,31 @@ impl LockManager {
     ///
     /// Sample URI: `"redis://127.0.0.1:6379"`
     pub fn new<T: AsRef<str> + IntoConnectionInfo>(uris: Vec<T>) -> LockManager {
+        Self::fallible_new(uris).unwrap()
+    }
+
+    /// Create a new lock manager instance, defined by the given Redis connection uris.
+    /// Quorum is defined to be N/2+1, with N being the number of given Redis instances.
+    ///
+    /// Sample URI: `"redis://127.0.0.1:6379"`
+    ///
+    /// This constructor can fail with an error.
+    pub fn fallible_new<T: AsRef<str> + IntoConnectionInfo>(
+        uris: Vec<T>,
+    ) -> Result<LockManager, redis::RedisError> {
         let quorum = (uris.len() as u32) / 2 + 1;
 
         let servers: Vec<Client> = uris
             .into_iter()
-            .map(|uri| Client::open(uri).unwrap())
-            .collect();
+            .map(|uri| Client::open(uri))
+            .collect::<Result<Vec<_>, _>>()?;
 
-        LockManager {
+        Ok(LockManager {
             servers,
             quorum,
             retry_count: DEFAULT_RETRY_COUNT,
             retry_delay: DEFAULT_RETRY_DELAY,
-        }
+        })
     }
 
     /// Get 20 random bytes from the pseudorandom interface.
@@ -263,7 +285,7 @@ impl LockManager {
     #[cfg(not(feature = "tokio"))]
     pub async fn acquire<'a>(&'a self, resource: &[u8], ttl: usize) -> LockGuard<'a> {
         let lock = self.acquire_no_guard(resource, ttl).await;
-        LockGuard{lock}
+        LockGuard { lock }
     }
 
     /// Loops until the lock is acquired.
