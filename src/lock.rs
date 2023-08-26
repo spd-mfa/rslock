@@ -267,12 +267,22 @@ impl LockManager {
     ///
     /// Sample URI: `"redis://127.0.0.1:6379"`
     pub fn new<T: IntoConnectionInfo>(uris: Vec<T>) -> LockManager {
+        Self::fallible_new(uris).unwrap()
+    }
+
+    /// Create a new lock manager instance, defined by the given Redis connection uris.
+    /// Quorum is defined to be N/2+1, with N being the number of given Redis instances.
+    ///
+    /// Sample URI: `"redis://127.0.0.1:6379"`
+    ///
+    /// This constructor can fail with an error.
+    pub fn fallible_new<T: IntoConnectionInfo>(uris: Vec<T>) -> Result<LockManager, redis::RedisError> {
         let servers: Vec<Client> = uris
             .into_iter()
-            .map(|uri| Client::open(uri).unwrap())
-            .collect();
+            .map(|uri| Client::open(uri))
+            .collect::<Result<Vec<_>,_>>()?;
 
-        Self::from_clients(servers)
+        Ok(Self::from_clients(servers))
     }
 
     /// Create a new lock manager instance, defined by the given Redis clients.
