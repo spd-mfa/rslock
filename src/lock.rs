@@ -235,13 +235,13 @@ pub struct Lock {
 /// Upon dropping the guard, `LockManager::unlock` will be ran synchronously on the executor.
 ///
 /// This is known to block the tokio runtime if this happens inside of the context of a tokio runtime
-/// if `tokio-comp` is enabled as a feature on this crate or the `redis` crate.
+/// if `tokio` is enabled as a feature on this crate or the `redis` crate.
 ///
-/// To eliminate this risk, if the `tokio-comp` flag is enabled, the `Drop` impl will not be compiled,
+/// To eliminate this risk, if the `tokio` flag is enabled, the `Drop` impl will not be compiled,
 /// meaning that dropping the `LockGuard` will be a no-op.
 /// Under this circumstance, `LockManager::unlock` can be called manually using the inner `lock` at the appropriate
 /// point to release the lock taken in `Redis`.
-#[cfg(not(feature = "tokio-comp"))]
+#[cfg(not(feature = "tokio"))]
 #[derive(Debug)]
 pub struct LockGuard {
     pub lock: Lock,
@@ -252,10 +252,10 @@ enum Operation {
     Extend,
 }
 
-/// Dropping this guard inside the context of a tokio runtime if `tokio-comp` is enabled
+/// Dropping this guard inside the context of a tokio runtime if `tokio` is enabled
 /// will block the tokio runtime.
-/// Because of this, the guard is not compiled if `tokio-comp` is enabled.
-#[cfg(not(feature = "tokio-comp"))]
+/// Because of this, the guard is not compiled if `tokio` is enabled.
+#[cfg(not(feature = "tokio"))]
 impl Drop for LockGuard {
     fn drop(&mut self) {
         futures::executor::block_on(self.lock.lock_manager.unlock(&self.lock));
@@ -432,7 +432,7 @@ impl LockManager {
     /// The lock is placed in a guard that will unlock the lock when the guard is dropped.
     ///
     /// May return `LockError::TtlTooLarge` if `ttl` is too large.
-    #[cfg(not(feature = "tokio-comp"))]
+    #[cfg(not(feature = "tokio"))]
     pub async fn acquire(&self, resource: &[u8], ttl: Duration) -> Result<LockGuard, LockError> {
         let lock = self.acquire_no_guard(resource, ttl).await?;
         Ok(LockGuard { lock })
@@ -588,7 +588,7 @@ mod tests {
         is_normal::<LockManager>();
         is_normal::<LockError>();
         is_normal::<Lock>();
-        #[cfg(not(feature = "tokio-comp"))]
+        #[cfg(not(feature = "tokio"))]
         is_normal::<LockGuard>();
     }
 
@@ -758,7 +758,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(not(feature = "tokio-comp"))]
+    #[cfg(not(feature = "tokio"))]
     #[tokio::test]
     async fn test_lock_lock_unlock_raii() -> Result<()> {
         let (_containers, addresses) = create_clients().await;
@@ -793,7 +793,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(not(feature = "tokio-comp"))]
+    #[cfg(not(feature = "tokio"))]
     #[tokio::test]
     async fn test_lock_raii_does_not_unlock_with_tokio_enabled() -> Result<()> {
         let (_containers, addresses) = create_clients().await;
@@ -803,7 +803,7 @@ mod tests {
         let key = rl1.get_unique_lock_id()?;
 
         async {
-            //The acquire function is only enabled for `async-std-comp` ??
+            //The acquire function is only enabled for `async-std` ??
             let lock_guard = rl1
                 .acquire(&key, Duration::from_millis(10_000))
                 .await
@@ -855,7 +855,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(not(feature = "tokio-comp"))]
+    #[cfg(not(feature = "tokio"))]
     #[tokio::test]
     async fn test_lock_extend_lock() -> Result<()> {
         let (_containers, addresses) = create_clients().await;
@@ -895,7 +895,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(not(feature = "tokio-comp"))]
+    #[cfg(not(feature = "tokio"))]
     #[tokio::test]
     async fn test_lock_extend_lock_releases() -> Result<()> {
         let (_containers, addresses) = create_clients().await;
@@ -977,7 +977,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[cfg(feature = "tokio-comp")]
+    #[cfg(feature = "tokio")]
     async fn test_lock_send_lock_manager() {
         let (_containers, addresses) = create_clients().await;
         let rl = LockManager::new(addresses.clone());
@@ -1001,7 +1001,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[cfg(feature = "tokio-comp")]
+    #[cfg(feature = "tokio")]
     async fn test_lock_state_in_multiple_threads() {
         let (_containers, addresses) = create_clients().await;
         let rl = LockManager::new(addresses.clone());

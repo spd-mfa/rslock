@@ -19,8 +19,12 @@ readme = "README.md"
 edition = "2021"
 
 [features]
-async-std-comp = ["redis/async-std-comp"]
-tokio-comp = ["redis/tokio-comp"]
+tokio = [] # Does nothing, used to limit features
+async-std = [] # Does nothing, used to limit features
+async-std-comp = ["async-std","redis/async-std-comp"]
+tokio-comp = ["tokio","redis/tokio-comp"]
+tokio-native-tls-comp = ["tokio","redis/tokio-native-tls-comp"]
+async-std-native-tls-comp = ["async-std", "redis/async-std-native-tls-comp"]
 default = ["async-std-comp"]
 
 [dependencies]
