@@ -28,7 +28,7 @@ async-std-native-tls-comp = ["async-std", "redis/async-std-native-tls-comp"]
 default = ["async-std-comp"]
 
 [dependencies]
-redis = { version = "0.23.2" }
+redis = { version = "0.26.1" }
 tokio = { version = "1.27.0", features = ["rt", "time"] }
 rand = "0.8.5"
 futures = "0.3.24"
