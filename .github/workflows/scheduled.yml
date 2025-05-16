@@ -13,9 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     name: ubuntu / nightly
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install nightly
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
+        with:
+          toolchain: nightly
       - name: cargo generate-lockfile
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
@@ -30,12 +32,14 @@ jobs:
     # Unfortunately, hashFiles only works in if on steps, so we reepeat it.
     # if: hashFiles('Cargo.lock') != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           submodules: true
       - name: Install beta
         if: hashFiles('Cargo.lock') != ''
-        uses: dtolnay/rust-toolchain@beta
+        uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
+        with:
+          toolchain: beta
       - name: cargo update
         if: hashFiles('Cargo.lock') != ''
         run: cargo update

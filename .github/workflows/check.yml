@@ -10,10 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     name: stable / fmt
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
         with:
+          toolchain: stable
           components: rustfmt
       - name: cargo fmt --check
         run: cargo fmt --check
@@ -28,27 +29,29 @@ jobs:
       matrix:
         toolchain: [stable, beta]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           submodules: true
       - name: Install ${{ matrix.toolchain }}
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
         with:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
       - name: cargo clippy
-        uses: actions-rs/clippy-check@v1
+        uses: actions-rs/clippy-check@b5b5f21f4797c02da247df37026fcd0a5024aa4d # v1.0.7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
   doc:
     runs-on: ubuntu-latest
     name: nightly / doc
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           submodules: true
       - name: Install nightly
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
+        with:
+          toolchain: nightly
       - name: cargo doc
         run: cargo doc --no-deps --all-features
         env:
@@ -57,13 +60,17 @@ jobs:
     runs-on: ubuntu-latest
     name: ubuntu / stable / features
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           submodules: true
       - name: Install stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
+        with:
+          toolchain: stable
       - name: cargo install cargo-hack
-        uses: taiki-e/install-action@cargo-hack
+        uses: taiki-e/install-action@13608a19a2204ea4cc0b5888e995ab288684b613 # v2.51.1
+        with:
+          tool: cargo-hack
       # intentionally no target specifier; see https://github.com/jonhoo/rust-ci-conf/pull/4
       - name: cargo hack
         run: cargo hack --feature-powerset check
